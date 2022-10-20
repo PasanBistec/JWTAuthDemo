@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
@@ -18,7 +18,7 @@ namespace JWTAuthDemo
         {
             this.key = key;
         }
-
+        
         public string Authenticate(string username,string password)
         {
             if(!users.Any(u=> u.Key == username && u.Value == password))
@@ -28,9 +28,25 @@ namespace JWTAuthDemo
 
             var tokenKey = Encoding.ASCII.GetBytes(key);
 
+            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name , username)
+                }),
 
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(
 
-            return null;
+                    new SymmetricSecurityKey(tokenKey),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            // creating the token
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+
         }
     }
 }

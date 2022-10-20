@@ -7,17 +7,27 @@ namespace JWTAuthDemo.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
+
+        // define the jtwauthentication manager instance
+        private readonly JwtAuthenticationManager jwtAuthenticationManager;
+
+
+
+        // define the constructor
+        public WeatherForecastController(JwtAuthenticationManager jwtAuthenticationManager)
+        {
+            this.jwtAuthenticationManager = jwtAuthenticationManager;
+        }
+
+
+
         private static readonly string[] Summaries = new[]
         {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
-        }
+ 
+        
 
         [HttpGet(Name = "GetWeatherForecast")]
         [Authorize]
@@ -31,5 +41,28 @@ namespace JWTAuthDemo.Controllers
             })
             .ToArray();
         }
+
+        // any user can access
+        [AllowAnonymous]
+        [HttpPost("Authorize")]
+
+        public IActionResult AuthUser([FromBody] User usr)
+        {
+            var token = jwtAuthenticationManager.Authenticate(usr.username, usr.password);
+            if(token == null)
+            {
+                return Unauthorized();
+
+            }
+            return Ok(token);
+
+        }
+
+    }
+
+    public class User
+    {
+        public string username { get; set; }
+        public string password { get; set; }
     }
 }
